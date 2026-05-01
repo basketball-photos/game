@@ -120,16 +120,12 @@ teams.forEach(team => {
 function getImagePath(name) {
   return "nbaphotos/" +
     name
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // removes accents
-      .replace(/'/g, "")               // removes apostrophes
-      .replace(/\./g, "")              // removes dots
-      .replace(/&/g, "and")            // turns & into "and"
-      .replace(/ /g, "-")              // spaces to hyphens
-    + ".png";
+      .replace(/'/g, "")
+      .replace(/\./g, "")
+      .replace(/&/g, "and")
+      .replace(/ /g, "-") +
+    "-2K-Rating.png";
 }
-
 // ---------------- GAME LOGIC ----------------
 function startGame() {
   let selectedTeams = Array.from(
