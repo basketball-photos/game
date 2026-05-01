@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Guess the Player</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #111;
+      color: white;
+    }
+
+    img {
+      width: 250px;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    #game { display: none; }
+
+    #teams {
+      max-height: 220px;
+      overflow-y: scroll;
+      border: 1px solid white;
+      padding: 10px;
+      margin: 10px auto;
+      width: 220px;
+      text-align: left;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Guess the Player</h1>
+
+<div id="menu">
+  <h3>Select Teams</h3>
+  <div id="teams"></div>
+  <button onclick="startGame()">Start Game</button>
+</div>
+
+<div id="game">
+  <img id="playerImg" alt="Player photo"><br><br>
+
+  <input id="guess" placeholder="Type player name"><br><br>
+
+  <button onclick="reveal()">Reveal Answer</button>
+  <p id="answer"></p>
+
+  <button onclick="mark(true)">I was right</button>
+  <button onclick="mark(false)">I was wrong</button>
+
+  <p id="score">Score: 0</p>
+</div>
+
+<script>
+
+// ---------------- PLAYERS ----------------
+// No img links here anymore.
+// Just name, team, and any extra flags you want later.
+let players = [
+  { name: "Anthony Davis", team: "Wizards" },
+  { name: "Trae Young", team: "Wizards" },
+  { name: "Alexandre Sarr", team: "Wizards" },
+  { name: "KyShawn George", team: "Wizards" },
+  { name: "Will Riley", team: "Wizards" },
+  { name: "Bilal Coulibaly", team: "Wizards" },
+  { name: "Justin Champagnie", team: "Wizards" },
+  { name: "Tristan Vukcevic", team: "Wizards" },
+  { name: "Julian Reese", team: "Wizards" },
+  { name: "Jamir Watkins", team: "Wizards" },
+  { name: "Jaden Hardy", team: "Wizards" },
+  { name: "D'Angelo Russell", team: "Wizards" },
+  { name: "Cam Whitmore", team: "Wizards" },
+  { name: "Sharife Cooper", team: "Wizards" },
+  { name: "Anthony Gill", team: "Wizards" },
+  { name: "Leaky Black", team: "Wizards" },
+  { name: "LeBron James", team: "Lakers" },
+  { name: "Stephen Curry", team: "Warriors" }
+];
+
+// ---------------- TEAMS ----------------
+let teams = [
+  "Hawks","Celtics","Nets","Hornets","Bulls",
+  "Cavaliers","Mavericks","Nuggets","Pistons","Warriors",
+  "Rockets","Pacers","Clippers","Lakers","Grizzlies",
+  "Heat","Bucks","Timberwolves","Pelicans","Knicks",
+  "Thunder","Magic","76ers","Suns","Trail Blazers",
+  "Kings","Spurs","Raptors","Jazz","Wizards"
+];
+
+// ---------------- STATE ----------------
+let filtered = [];
+let currentPlayer;
+let score = 0;
+
+// ---------------- BUILD TEAM CHECKBOXES ----------------
+let teamsDiv = document.getElementById("teams");
+
+teams.forEach(team => {
+  let label = document.createElement("label");
+  label.innerHTML = `<input type="checkbox" value="${team}" checked> ${team}`;
+  teamsDiv.appendChild(label);
+  teamsDiv.appendChild(document.createElement("br"));
+});
+
+// ---------------- IMAGE PATH BUILDER ----------------
+// Put your images in a folder called "nbaphotos"
+// and name them like:
+// anthony-davis.png
+// dangelo-russell.png
+// stephen-curry.png
+function getImagePath(name) {
+  return "nbaphotos/" +
+    name
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // removes accents
+      .replace(/'/g, "")               // removes apostrophes
+      .replace(/\./g, "")              // removes dots
+      .replace(/&/g, "and")            // turns & into "and"
+      .replace(/ /g, "-")              // spaces to hyphens
+    + ".png";
+}
+
+// ---------------- GAME LOGIC ----------------
+function startGame() {
+  let selectedTeams = Array.from(
+    document.querySelectorAll('#teams input:checked')
+  ).map(cb => cb.value);
+
+  filtered = players.filter(p => selectedTeams.includes(p.team));
+
+  if (filtered.length === 0) {
+    alert("No players match your filters");
+    return;
+  }
+
+  score = 0;
+  document.getElementById("score").innerText = "Score: 0";
+
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("game").style.display = "block";
+
+  nextPlayer();
+}
+
+function nextPlayer() {
+  currentPlayer = filtered[Math.floor(Math.random() * filtered.length)];
+
+  document.getElementById("playerImg").src = getImagePath(currentPlayer.name);
+
+  document.getElementById("guess").value = "";
+  document.getElementById("answer").innerText = "";
+}
+
+function reveal() {
+  document.getElementById("answer").innerText = currentPlayer.name;
+}
+
+function mark(correct) {
+  if (correct) score++;
+
+  document.getElementById("score").innerText = "Score: " + score;
+
+  nextPlayer();
+}
+
+</script>
+
+</body>
+</html>
