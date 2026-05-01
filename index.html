@@ -8,6 +8,8 @@
       text-align: center;
       background: #111;
       color: white;
+      margin: 0;
+      padding: 20px;
     }
 
     img {
@@ -15,18 +17,20 @@
       height: 250px;
       object-fit: cover;
       border-radius: 10px;
+      border: 2px solid #333;
     }
 
-    #game { display: none; }
+    #game, #historyPanel { display: none; }
 
     #teams {
-      max-height: 220px;
-      overflow-y: scroll;
+      max-height: 240px;
+      overflow-y: auto;
       border: 1px solid white;
       padding: 10px;
       margin: 10px auto;
-      width: 220px;
+      width: 240px;
       text-align: left;
+      background: #1b1b1b;
     }
 
     button {
@@ -34,22 +38,101 @@
       margin: 5px;
       cursor: pointer;
     }
+
+    input[type="text"] {
+      padding: 8px;
+      width: 260px;
+      max-width: 90%;
+      box-sizing: border-box;
+    }
+
+    select, label {
+      margin: 5px;
+    }
+
+    .small {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    #historyPanel {
+      max-width: 900px;
+      margin: 20px auto;
+      text-align: left;
+      background: #1b1b1b;
+      border: 1px solid #444;
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    #historyList {
+      max-height: 350px;
+      overflow-y: auto;
+      border-top: 1px solid #444;
+      margin-top: 10px;
+      padding-top: 10px;
+    }
+
+    .historyRow {
+      padding: 8px 0;
+      border-bottom: 1px solid #333;
+      line-height: 1.4;
+    }
+
+    .rowGood { color: #8dff8d; }
+    .rowBad { color: #ff8d8d; }
+
+    .menuBox {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 10px;
+      background: #1b1b1b;
+      border: 1px solid #333;
+      border-radius: 10px;
+    }
+
+    .topControls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
   </style>
 </head>
 <body>
 
 <h1>Guess the Player</h1>
 
-<div id="menu">
+<div id="menu" class="menuBox">
+  <div class="topControls">
+    <button onclick="selectAllTeams()">Select All Teams</button>
+    <button onclick="deselectAllTeams()">Deselect All Teams</button>
+
+    <label>
+      <input type="checkbox" id="ballKnowledge">
+      Ball Knowledge
+    </label>
+
+    <label>
+      Mode:
+      <select id="mode">
+        <option value="forever">Loop Forever</option>
+        <option value="once">Each Player Once</option>
+      </select>
+    </label>
+  </div>
+
   <h3>Select Teams</h3>
   <div id="teams"></div>
+
   <button onclick="startGame()">Start Game</button>
 </div>
 
 <div id="game">
-  <img id="playerImg" alt="Player photo"><br><br>
+  <img id="playerImg" alt="Player image"><br><br>
 
-  <input id="guess" placeholder="Type player name"><br><br>
+  <input id="guess" type="text" placeholder="Type player name"><br><br>
 
   <button onclick="reveal()">Reveal Answer</button>
   <p id="answer"></p>
@@ -58,35 +141,50 @@
   <button onclick="mark(false)">I was wrong</button>
 
   <p id="score">Score: 0</p>
+
+  <button onclick="toggleHistory()">Tally / History</button>
+  <button onclick="backToMenu()">Back to Menu</button>
+
+  <p id="status" class="small"></p>
+</div>
+
+<div id="historyPanel">
+  <h2>Tally / History</h2>
+  <div class="small" id="historySummary"></div>
+  <div id="historyList"></div>
+  <button onclick="toggleHistory()">Close History</button>
 </div>
 
 <script>
-
-// ---------------- PLAYERS ----------------
-// No img links here anymore.
-// Just name, team, and any extra flags you want later.
+/* =========================
+   PLAYERS
+   No img links here.
+   The image path is generated from the player name.
+   ========================= */
 let players = [
-  { name: "Anthony Davis", team: "Wizards" },
-  { name: "Trae Young", team: "Wizards" },
-  { name: "Alexandre Sarr", team: "Wizards" },
-  { name: "KyShawn George", team: "Wizards" },
-  { name: "Will Riley", team: "Wizards" },
-  { name: "Bilal Coulibaly", team: "Wizards" },
-  { name: "Justin Champagnie", team: "Wizards" },
-  { name: "Tristan Vukcevic", team: "Wizards" },
-  { name: "Julian Reese", team: "Wizards" },
-  { name: "Jamir Watkins", team: "Wizards" },
-  { name: "Jaden Hardy", team: "Wizards" },
-  { name: "D'Angelo Russell", team: "Wizards" },
-  { name: "Cam Whitmore", team: "Wizards" },
-  { name: "Sharife Cooper", team: "Wizards" },
-  { name: "Anthony Gill", team: "Wizards" },
-  { name: "Leaky Black", team: "Wizards" },
-  { name: "LeBron James", team: "Lakers" },
-  { name: "Stephen Curry", team: "Warriors" }
+  { name: "Anthony Davis", team: "Wizards", ballKnowledge: false },
+  { name: "Trae Young", team: "Wizards", ballKnowledge: false },
+  { name: "Alexandre Sarr", team: "Wizards", ballKnowledge: false },
+  { name: "KyShawn George", team: "Wizards", ballKnowledge: false },
+  { name: "Will Riley", team: "Wizards", ballKnowledge: true },
+  { name: "Bilal Coulibaly", team: "Wizards", ballKnowledge: false },
+  { name: "Justin Champagnie", team: "Wizards", ballKnowledge: true },
+  { name: "Tristan Vukcevic", team: "Wizards", ballKnowledge: true },
+  { name: "Julian Reese", team: "Wizards", ballKnowledge: true },
+  { name: "Jamir Watkins", team: "Wizards", ballKnowledge: true },
+  { name: "Jaden Hardy", team: "Wizards", ballKnowledge: false },
+  { name: "D'Angelo Russell", team: "Wizards", ballKnowledge: false },
+  { name: "Cam Whitmore", team: "Wizards", ballKnowledge: true },
+  { name: "Sharife Cooper", team: "Wizards", ballKnowledge: true },
+  { name: "Anthony Gill", team: "Wizards", ballKnowledge: true },
+  { name: "Leaky Black", team: "Wizards", ballKnowledge: true },
+  { name: "LeBron James", team: "Lakers", ballKnowledge: false },
+  { name: "Stephen Curry", team: "Warriors", ballKnowledge: false }
 ];
 
-// ---------------- TEAMS ----------------
+/* =========================
+   TEAMS
+   ========================= */
 let teams = [
   "Hawks","Celtics","Nets","Hornets","Bulls",
   "Cavaliers","Mavericks","Nuggets","Pistons","Warriors",
@@ -96,12 +194,19 @@ let teams = [
   "Kings","Spurs","Raptors","Jazz","Wizards"
 ];
 
-// ---------------- STATE ----------------
+/* =========================
+   STATE VARIABLES
+   ========================= */
 let filtered = [];
-let currentPlayer;
+let currentPlayer = null;
+let currentIndex = 0;
 let score = 0;
+let history = [];
+let roundCount = 0;
 
-// ---------------- BUILD TEAM CHECKBOXES ----------------
+/* =========================
+   BUILD TEAM CHECKBOXES
+   ========================= */
 let teamsDiv = document.getElementById("teams");
 
 teams.forEach(team => {
@@ -111,12 +216,25 @@ teams.forEach(team => {
   teamsDiv.appendChild(document.createElement("br"));
 });
 
-// ---------------- IMAGE PATH BUILDER ----------------
-// Put your images in a folder called "nbaphotos"
-// and name them like:
-// anthony-davis.png
-// dangelo-russell.png
-// stephen-curry.png
+/* =========================
+   SELECT / DESELECT ALL TEAMS
+   ========================= */
+function selectAllTeams() {
+  document.querySelectorAll('#teams input[type="checkbox"]').forEach(cb => cb.checked = true);
+}
+
+function deselectAllTeams() {
+  document.querySelectorAll('#teams input[type="checkbox"]').forEach(cb => cb.checked = false);
+}
+
+/* =========================
+   IMAGE PATH GENERATOR
+   Matches files like:
+   Anthony-Davis-2K-Rating.png
+   DAngelo-Russell-2K-Rating.png
+   Stephen-Curry-2K-Rating.png
+   Folder: nbaphotos
+   ========================= */
 function getImagePath(name) {
   return "nbaphotos/" +
     name
@@ -126,13 +244,23 @@ function getImagePath(name) {
       .replace(/ /g, "-") +
     "-2K-Rating.png";
 }
-// ---------------- GAME LOGIC ----------------
+
+/* =========================
+   START GAME
+   ========================= */
 function startGame() {
   let selectedTeams = Array.from(
     document.querySelectorAll('#teams input:checked')
   ).map(cb => cb.value);
 
-  filtered = players.filter(p => selectedTeams.includes(p.team));
+  let ballKnowledgeOnly = document.getElementById("ballKnowledge").checked;
+  let mode = document.getElementById("mode").value;
+
+  filtered = players.filter(p => {
+    let teamMatch = selectedTeams.includes(p.team);
+    let ballMatch = !ballKnowledgeOnly || p.ballKnowledge === true;
+    return teamMatch && ballMatch;
+  });
 
   if (filtered.length === 0) {
     alert("No players match your filters");
@@ -140,35 +268,153 @@ function startGame() {
   }
 
   score = 0;
-  document.getElementById("score").innerText = "Score: 0";
+  history = [];
+  roundCount = 0;
+  currentPlayer = null;
+  currentIndex = 0;
 
+  if (mode === "once") {
+    filtered = shuffleArray(filtered.slice());
+  }
+
+  document.getElementById("score").innerText = "Score: 0";
+  document.getElementById("status").innerText = "";
   document.getElementById("menu").style.display = "none";
   document.getElementById("game").style.display = "block";
+  document.getElementById("historyPanel").style.display = "none";
 
   nextPlayer();
 }
 
+/* =========================
+   NEXT PLAYER
+   No consecutive repeats in forever mode
+   ========================= */
 function nextPlayer() {
-  currentPlayer = filtered[Math.floor(Math.random() * filtered.length)];
+  let mode = document.getElementById("mode").value;
+
+  if (mode === "once") {
+    if (currentIndex >= filtered.length) {
+      document.getElementById("status").innerText = "Finished every player once.";
+      document.getElementById("playerImg").src = "";
+      document.getElementById("answer").innerText = "";
+      document.getElementById("guess").value = "";
+      currentPlayer = null;
+      return;
+    }
+
+    currentPlayer = filtered[currentIndex];
+    currentIndex++;
+  } else {
+    if (filtered.length === 1) {
+      currentPlayer = filtered[0];
+    } else {
+      let candidate = currentPlayer;
+      while (candidate === currentPlayer) {
+        candidate = filtered[Math.floor(Math.random() * filtered.length)];
+      }
+      currentPlayer = candidate;
+    }
+  }
 
   document.getElementById("playerImg").src = getImagePath(currentPlayer.name);
-
   document.getElementById("guess").value = "";
   document.getElementById("answer").innerText = "";
+  document.getElementById("status").innerText = "";
 }
 
+/* =========================
+   REVEAL ANSWER
+   ========================= */
 function reveal() {
+  if (!currentPlayer) return;
   document.getElementById("answer").innerText = currentPlayer.name;
 }
 
+/* =========================
+   MARK RIGHT / WRONG
+   Stores history
+   ========================= */
 function mark(correct) {
+  if (!currentPlayer) return;
+
+  let guess = document.getElementById("guess").value.trim();
+
   if (correct) score++;
 
+  roundCount++;
+
+  history.push({
+    player: currentPlayer.name,
+    team: currentPlayer.team,
+    guess: guess,
+    markedCorrect: correct,
+    answer: currentPlayer.name
+  });
+
   document.getElementById("score").innerText = "Score: " + score;
+  updateHistoryPanel();
 
   nextPlayer();
 }
 
+/* =========================
+   HISTORY / TALLY PANEL
+   ========================= */
+function toggleHistory() {
+  let panel = document.getElementById("historyPanel");
+  panel.style.display = (panel.style.display === "block") ? "none" : "block";
+  updateHistoryPanel();
+}
+
+function updateHistoryPanel() {
+  let list = document.getElementById("historyList");
+  let summary = document.getElementById("historySummary");
+
+  summary.innerText =
+    "Rounds: " + roundCount + " | Score: " + score + " | Correct marks only add to score";
+
+  if (history.length === 0) {
+    list.innerHTML = "<div class='small'>No rounds yet.</div>";
+    return;
+  }
+
+  list.innerHTML = history.map((item, index) => {
+    let cls = item.markedCorrect ? "rowGood" : "rowBad";
+    let result = item.markedCorrect ? "Correct" : "Incorrect";
+    let typed = item.guess === "" ? "(blank)" : item.guess;
+
+    return `
+      <div class="historyRow ${cls}">
+        <strong>${index + 1}. ${item.player}</strong> — ${item.team}<br>
+        You typed: ${typed}<br>
+        Marked: ${result}<br>
+        Answer: ${item.answer}
+      </div>
+    `;
+  }).join("");
+}
+
+/* =========================
+   BACK TO MENU
+   ========================= */
+function backToMenu() {
+  document.getElementById("game").style.display = "none";
+  document.getElementById("historyPanel").style.display = "none";
+  document.getElementById("menu").style.display = "block";
+}
+
+/* =========================
+   SHUFFLE
+   Used for "once" mode
+   ========================= */
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
 </script>
 
 </body>
