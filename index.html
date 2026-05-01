@@ -20,7 +20,7 @@
       border: 2px solid #333;
     }
 
-    #game, #historyPanel { display: none; }
+    #game, #historyPanel, #endScreen { display: none; }
 
     #teams {
       max-height: 240px;
@@ -55,7 +55,7 @@
       opacity: 0.9;
     }
 
-    #historyPanel {
+    #historyPanel, #endScreen {
       max-width: 900px;
       margin: 20px auto;
       text-align: left;
@@ -65,7 +65,7 @@
       border-radius: 10px;
     }
 
-    #historyList {
+    #historyList, #endList {
       max-height: 350px;
       overflow-y: auto;
       border-top: 1px solid #444;
@@ -153,6 +153,14 @@
   <div class="small" id="historySummary"></div>
   <div id="historyList"></div>
   <button onclick="toggleHistory()">Close History</button>
+</div>
+
+<div id="endScreen">
+  <h2>Receipt</h2>
+  <div class="small" id="endSummary"></div>
+  <div id="endList"></div>
+  <button onclick="tryAgain()">Try Again</button>
+  <button onclick="goHome()">Go Home</button>
 </div>
 
 <script>
@@ -282,6 +290,7 @@ function startGame() {
   document.getElementById("menu").style.display = "none";
   document.getElementById("game").style.display = "block";
   document.getElementById("historyPanel").style.display = "none";
+  document.getElementById("endScreen").style.display = "none";
 
   nextPlayer();
 }
@@ -295,11 +304,8 @@ function nextPlayer() {
 
   if (mode === "once") {
     if (currentIndex >= filtered.length) {
-      document.getElementById("status").innerText = "Finished every player once.";
-      document.getElementById("playerImg").src = "";
-      document.getElementById("answer").innerText = "";
-      document.getElementById("guess").value = "";
       currentPlayer = null;
+      showEndScreen();
       return;
     }
 
@@ -396,11 +402,56 @@ function updateHistoryPanel() {
 }
 
 /* =========================
+   END SCREEN / RECEIPT
+   ========================= */
+function showEndScreen() {
+  document.getElementById("game").style.display = "none";
+  document.getElementById("historyPanel").style.display = "none";
+  document.getElementById("endScreen").style.display = "block";
+
+  document.getElementById("endSummary").innerText =
+    "Final score: " + score + " | Rounds: " + roundCount;
+
+  let list = document.getElementById("endList");
+
+  if (history.length === 0) {
+    list.innerHTML = "<div class='small'>No rounds were played.</div>";
+    return;
+  }
+
+  list.innerHTML = history.map((item, index) => {
+    let cls = item.markedCorrect ? "rowGood" : "rowBad";
+    let result = item.markedCorrect ? "Correct" : "Incorrect";
+    let typed = item.guess === "" ? "(blank)" : item.guess;
+
+    return `
+      <div class="historyRow ${cls}">
+        <strong>${index + 1}. ${item.player}</strong> — ${item.team}<br>
+        You typed: ${typed}<br>
+        Marked: ${result}<br>
+        Answer: ${item.answer}
+      </div>
+    `;
+  }).join("");
+}
+
+function tryAgain() {
+  document.getElementById("endScreen").style.display = "none";
+  startGame();
+}
+
+function goHome() {
+  document.getElementById("endScreen").style.display = "none";
+  document.getElementById("menu").style.display = "block";
+}
+
+/* =========================
    BACK TO MENU
    ========================= */
 function backToMenu() {
   document.getElementById("game").style.display = "none";
   document.getElementById("historyPanel").style.display = "none";
+  document.getElementById("endScreen").style.display = "none";
   document.getElementById("menu").style.display = "block";
 }
 
