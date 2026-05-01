@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Guess the Player</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #111;
+      color: white;
+    }
+
+    img {
+      width: 250px;
+      height: 250px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    #game { display: none; }
+
+    #teams {
+      max-height: 220px;
+      overflow-y: scroll;
+      border: 1px solid white;
+      padding: 10px;
+      margin: 10px auto;
+      width: 220px;
+      text-align: left;
+    }
+
+    button {
+      padding: 8px 16px;
+      margin: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Guess the Player</h1>
+
+<div id="menu">
+  <h3>Select Teams</h3>
+  <div id="teams"></div>
+  <button onclick="startGame()">Start Game</button>
+</div>
+
+<div id="game">
+  <img id="playerImg"><br><br>
+
+  <input id="guess" placeholder="Type player name"><br><br>
+
+  <button onclick="reveal()">Reveal Answer</button>
+  <p id="answer"></p>
+
+  <button onclick="mark(true)">I was right</button>
+  <button onclick="mark(false)">I was wrong</button>
+
+  <p id="score">Score: 0</p>
+</div>
+
+<script>
+
+// ---------------- PLAYERS ----------------
+// YOU control this. Add as many as you want.
+let players = [
+  {
+    name: "Anthony Davis",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Anthony-Davis-2K-Rating.png"
+  },
+{
+    name: "Trae Young",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Trae-Young-2K-Rating.png"
+  },
+{
+    name: "Alexandre Sarr",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Alexandre-Sarr-2K-Rating.png"
+  },
+{
+    name: "KyShawn George",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/KyShawn-George-2K-Rating.png"
+  },
+{
+    name: "Will Riley",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Will-Riley-2K-Rating.png"
+  },
+{
+    name: "Bilal Coulibaly",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Bilal-Coulibaly-2K-Rating.png"
+  },
+{
+    name: "Justin Champagnie",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Justin-Champagnie-2K-Rating.png"
+  },
+{
+    name: "Tristan Vukcevic",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Tristan-Vukcevic-2K-Rating.png"
+  },
+{
+    name: "Julian Reese",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Julian-Reese-2K-Rating.png"
+  },
+{
+    name: "Jamir Watkins",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Jamir-Watkins-2K-Rating.png"
+  },
+{
+    name: "Jaden Hardy",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Jaden-Hardy-2K-Rating.png"
+  },
+{
+    name: "D'Angelo Russell",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/DAngelo-Russell-2K-Rating-1.png"
+  },
+{
+    name: "Cam Whitmore",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Cam-Whitmore-2K-Rating.png"
+  },
+{
+    name: "Sharife Cooper",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Sharife-Cooper-2K-Rating.png"
+  },
+{
+    name: "Anthony Gill",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Anthony-Gill-2K-Rating.png"
+  },
+{
+    name: "Leaky Black",
+    team: "Wizards",
+    img: "https://www.2kratings.com/wp-content/uploads/Leaky-Black-2K-Rating.png"
+  },
+  {
+    name: "LeBron James",
+    team: "Lakers",
+    img: "https://www.2kratings.com/wp-content/uploads/LeBron-James-2K-Rating.png"
+  },
+  {
+    name: "Stephen Curry",
+    team: "Warriors",
+    img: "https://www.2kratings.com/wp-content/uploads/Stephen-Curry-2K-Rating.png"
+  }
+];
+
+// ---------------- TEAMS ----------------
+let teams = [
+  "Hawks","Celtics","Nets","Hornets","Bulls",
+  "Cavaliers","Mavericks","Nuggets","Pistons","Warriors",
+  "Rockets","Pacers","Clippers","Lakers","Grizzlies",
+  "Heat","Bucks","Timberwolves","Pelicans","Knicks",
+  "Thunder","Magic","76ers","Suns","Trail Blazers",
+  "Kings","Spurs","Raptors","Jazz","Wizards"
+];
+
+// ---------------- STATE ----------------
+let filtered = [];
+let currentPlayer;
+let score = 0;
+
+// ---------------- BUILD TEAM CHECKBOXES ----------------
+let teamsDiv = document.getElementById("teams");
+
+teams.forEach(team => {
+  let label = document.createElement("label");
+  label.innerHTML = `<input type="checkbox" value="${team}" checked> ${team}`;
+  teamsDiv.appendChild(label);
+  teamsDiv.appendChild(document.createElement("br"));
+});
+
+// ---------------- GAME LOGIC ----------------
+function startGame() {
+  let selectedTeams = Array.from(
+    document.querySelectorAll('#teams input:checked')
+  ).map(cb => cb.value);
+
+  filtered = players.filter(p => selectedTeams.includes(p.team));
+
+  if (filtered.length === 0) {
+    alert("No players match your filters");
+    return;
+  }
+
+  score = 0;
+  document.getElementById("score").innerText = "Score: 0";
+
+  document.getElementById("menu").style.display = "none";
+  document.getElementById("game").style.display = "block";
+
+  nextPlayer();
+}
+
+function nextPlayer() {
+  currentPlayer = filtered[Math.floor(Math.random() * filtered.length)];
+
+  document.getElementById("playerImg").src = currentPlayer.img;
+
+  document.getElementById("guess").value = "";
+  document.getElementById("answer").innerText = "";
+}
+
+function reveal() {
+  document.getElementById("answer").innerText = currentPlayer.name;
+}
+
+function mark(correct) {
+  if (correct) score++;
+
+  document.getElementById("score").innerText = "Score: " + score;
+
+  nextPlayer();
+}
+
+</script>
+
+</body>
+</html>
