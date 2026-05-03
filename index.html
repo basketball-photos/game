@@ -222,9 +222,7 @@
 <script>
 /* =========================
    PLAYERS
-   No img links here.
-   The image path is generated from the player name.
-   izzy: true means the player appears only in Izzy Mode.
+   izzy: true means the player appears only when Izzy Mode is on.
    ========================= */
 let players = [
   { name: "Anthony Davis", team: "Wizards", ballKnowledge: false, izzy: false },
@@ -245,7 +243,6 @@ let players = [
   { name: "Leaky Black", team: "Wizards", ballKnowledge: true, izzy: false },
   { name: "LeBron James", team: "Lakers", ballKnowledge: false, izzy: false },
   { name: "Stephen Curry", team: "Warriors", ballKnowledge: false, izzy: false },
-
   { name: "Jaylen Brown", team: "Celtics", ballKnowledge: false, izzy: true },
   { name: "Giannis Antetokounmpo", team: "Bucks", ballKnowledge: false, izzy: true },
   { name: "Devin Booker", team: "Suns", ballKnowledge: false, izzy: true },
@@ -253,7 +250,7 @@ let players = [
   { name: "Luka Doncic", team: "Lakers", ballKnowledge: false, izzy: true },
   { name: "Anthony Edwards", team: "Timberwolves", ballKnowledge: false, izzy: true },
   { name: "Toumani Camara", team: "Trail Blazers", ballKnowledge: false, izzy: true },
-  { name: "Sandro Mamukelashvili", team: "Spurs", ballKnowledge: false, izzy: true },
+  { name: "Sandro Mamukelashvili", team: "Raptors", ballKnowledge: false, izzy: true },
   { name: "Joel Embiid", team: "76ers", ballKnowledge: false, izzy: true },
   { name: "Austin Reaves", team: "Lakers", ballKnowledge: false, izzy: true }
 ];
@@ -294,7 +291,8 @@ teams.forEach(team => {
 });
 
 /* =========================
-   IZZY MODE UI
+   IZZY MODE TOGGLE
+   Click the capital G to toggle it.
    ========================= */
 function updateIzzyUI() {
   let izzySwitch = document.getElementById("izzySwitch");
@@ -309,25 +307,11 @@ function updateIzzyUI() {
   }
 }
 
-function applyIzzyVisuals() {
-  updateIzzyUI();
-
-  if (document.getElementById("game").style.display === "block" && currentPlayer) {
-    if (izzyMode) {
-      document.getElementById("answer").innerText = currentPlayer.name;
-      document.getElementById("status").innerText = "Izzy Mode active";
-    } else {
-      document.getElementById("answer").innerText = "";
-      document.getElementById("status").innerText = "";
-    }
-  }
-}
-
 document.getElementById("secretG").addEventListener("click", () => {
   let turnOn = !izzyMode;
   if (confirm(turnOn ? "Activate Izzy Mode?" : "Deactivate Izzy Mode?")) {
     izzyMode = turnOn;
-    applyIzzyVisuals();
+    updateIzzyUI();
   }
 });
 
@@ -407,7 +391,6 @@ function startGame() {
 
 /* =========================
    NEXT PLAYER
-   No consecutive repeats in forever mode
    ========================= */
 function nextPlayer() {
   let mode = document.getElementById("mode").value;
@@ -435,13 +418,8 @@ function nextPlayer() {
 
   document.getElementById("playerImg").src = getImagePath(currentPlayer.name);
   document.getElementById("guess").value = "";
+  document.getElementById("answer").innerText = "";
   document.getElementById("status").innerText = "";
-
-  if (izzyMode) {
-    document.getElementById("answer").innerText = currentPlayer.name;
-  } else {
-    document.getElementById("answer").innerText = "";
-  }
 }
 
 /* =========================
@@ -454,7 +432,6 @@ function reveal() {
 
 /* =========================
    MARK RIGHT / WRONG
-   Stores history
    ========================= */
 function mark(correct) {
   if (!currentPlayer) return;
@@ -572,7 +549,6 @@ function backToMenu() {
 
 /* =========================
    SHUFFLE
-   Used for "once" mode
    ========================= */
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
