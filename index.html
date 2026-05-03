@@ -98,11 +98,60 @@
       gap: 10px;
       margin-bottom: 10px;
     }
+
+    #izzyDock {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      z-index: 999;
+      pointer-events: none;
+    }
+
+    #izzySwitch {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #444;
+      background: #222;
+      color: #ccc;
+      font-size: 12px;
+      opacity: 0.8;
+      user-select: none;
+      transition: 0.2s ease;
+    }
+
+    #izzySwitch.on {
+      background: #173117;
+      border-color: #4caf50;
+      color: #bff7bf;
+      opacity: 1;
+    }
+
+    #izzyDot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #666;
+      display: inline-block;
+    }
+
+    #izzySwitch.on #izzyDot {
+      background: #8dff8d;
+    }
+
+    #secretG {
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+    }
   </style>
 </head>
 <body>
 
-<h1>Guess the Player</h1>
+<h1><span id="secretG">G</span>uess the Player</h1>
 
 <div id="menu" class="menuBox">
   <div class="topControls">
@@ -163,31 +212,50 @@
   <button onclick="goHome()">Go Home</button>
 </div>
 
+<div id="izzyDock">
+  <div id="izzySwitch">
+    <span id="izzyDot"></span>
+    <span id="izzyText">Izzy OFF</span>
+  </div>
+</div>
+
 <script>
 /* =========================
    PLAYERS
    No img links here.
    The image path is generated from the player name.
+   izzy: true means the player appears only in Izzy Mode.
    ========================= */
 let players = [
-  { name: "Anthony Davis", team: "Wizards", ballKnowledge: false },
-  { name: "Trae Young", team: "Wizards", ballKnowledge: false },
-  { name: "Alexandre Sarr", team: "Wizards", ballKnowledge: false },
-  { name: "KyShawn George", team: "Wizards", ballKnowledge: false },
-  { name: "Will Riley", team: "Wizards", ballKnowledge: true },
-  { name: "Bilal Coulibaly", team: "Wizards", ballKnowledge: false },
-  { name: "Justin Champagnie", team: "Wizards", ballKnowledge: true },
-  { name: "Tristan Vukcevic", team: "Wizards", ballKnowledge: true },
-  { name: "Julian Reese", team: "Wizards", ballKnowledge: true },
-  { name: "Jamir Watkins", team: "Wizards", ballKnowledge: true },
-  { name: "Jaden Hardy", team: "Wizards", ballKnowledge: false },
-  { name: "D'Angelo Russell", team: "Wizards", ballKnowledge: false },
-  { name: "Cam Whitmore", team: "Wizards", ballKnowledge: true },
-  { name: "Sharife Cooper", team: "Wizards", ballKnowledge: true },
-  { name: "Anthony Gill", team: "Wizards", ballKnowledge: true },
-  { name: "Leaky Black", team: "Wizards", ballKnowledge: true },
-  { name: "LeBron James", team: "Lakers", ballKnowledge: false },
-  { name: "Stephen Curry", team: "Warriors", ballKnowledge: false }
+  { name: "Anthony Davis", team: "Wizards", ballKnowledge: false, izzy: false },
+  { name: "Trae Young", team: "Wizards", ballKnowledge: false, izzy: false },
+  { name: "Alexandre Sarr", team: "Wizards", ballKnowledge: false, izzy: false },
+  { name: "KyShawn George", team: "Wizards", ballKnowledge: false, izzy: false },
+  { name: "Will Riley", team: "Wizards", ballKnowledge: true, izzy: false },
+  { name: "Bilal Coulibaly", team: "Wizards", ballKnowledge: false, izzy: false },
+  { name: "Justin Champagnie", team: "Wizards", ballKnowledge: true, izzy: false },
+  { name: "Tristan Vukcevic", team: "Wizards", ballKnowledge: true, izzy: false },
+  { name: "Julian Reese", team: "Wizards", ballKnowledge: true, izzy: false },
+  { name: "Jamir Watkins", team: "Wizards", ballKnowledge: true, izzy: false },
+  { name: "Jaden Hardy", team: "Wizards", ballKnowledge: false, izzy: false },
+  { name: "D'Angelo Russell", team: "Wizards", ballKnowledge: false, izzy: false },
+  { name: "Cam Whitmore", team: "Wizards", ballKnowledge: true, izzy: false },
+  { name: "Sharife Cooper", team: "Wizards", ballKnowledge: true, izzy: false },
+  { name: "Anthony Gill", team: "Wizards", ballKnowledge: true, izzy: false },
+  { name: "Leaky Black", team: "Wizards", ballKnowledge: true, izzy: false },
+  { name: "LeBron James", team: "Lakers", ballKnowledge: false, izzy: false },
+  { name: "Stephen Curry", team: "Warriors", ballKnowledge: false, izzy: false },
+
+  { name: "Jaylen Brown", team: "Celtics", ballKnowledge: false, izzy: true },
+  { name: "Giannis Antetokounmpo", team: "Bucks", ballKnowledge: false, izzy: true },
+  { name: "Devin Booker", team: "Suns", ballKnowledge: false, izzy: true },
+  { name: "Bam Adebayo", team: "Heat", ballKnowledge: false, izzy: true },
+  { name: "Luka Doncic", team: "Lakers", ballKnowledge: false, izzy: true },
+  { name: "Anthony Edwards", team: "Timberwolves", ballKnowledge: false, izzy: true },
+  { name: "Toumani Camara", team: "Trail Blazers", ballKnowledge: false, izzy: true },
+  { name: "Sandro Mamukelashvili", team: "Spurs", ballKnowledge: false, izzy: true },
+  { name: "Joel Embiid", team: "76ers", ballKnowledge: false, izzy: true },
+  { name: "Austin Reaves", team: "Lakers", ballKnowledge: false, izzy: true }
 ];
 
 /* =========================
@@ -211,6 +279,7 @@ let currentIndex = 0;
 let score = 0;
 let history = [];
 let roundCount = 0;
+let izzyMode = false;
 
 /* =========================
    BUILD TEAM CHECKBOXES
@@ -223,6 +292,46 @@ teams.forEach(team => {
   teamsDiv.appendChild(label);
   teamsDiv.appendChild(document.createElement("br"));
 });
+
+/* =========================
+   IZZY MODE UI
+   ========================= */
+function updateIzzyUI() {
+  let izzySwitch = document.getElementById("izzySwitch");
+  let izzyText = document.getElementById("izzyText");
+
+  if (izzyMode) {
+    izzySwitch.classList.add("on");
+    izzyText.innerText = "Izzy ON";
+  } else {
+    izzySwitch.classList.remove("on");
+    izzyText.innerText = "Izzy OFF";
+  }
+}
+
+function applyIzzyVisuals() {
+  updateIzzyUI();
+
+  if (document.getElementById("game").style.display === "block" && currentPlayer) {
+    if (izzyMode) {
+      document.getElementById("answer").innerText = currentPlayer.name;
+      document.getElementById("status").innerText = "Izzy Mode active";
+    } else {
+      document.getElementById("answer").innerText = "";
+      document.getElementById("status").innerText = "";
+    }
+  }
+}
+
+document.getElementById("secretG").addEventListener("click", () => {
+  let turnOn = !izzyMode;
+  if (confirm(turnOn ? "Activate Izzy Mode?" : "Deactivate Izzy Mode?")) {
+    izzyMode = turnOn;
+    applyIzzyVisuals();
+  }
+});
+
+updateIzzyUI();
 
 /* =========================
    SELECT / DESELECT ALL TEAMS
@@ -267,7 +376,8 @@ function startGame() {
   filtered = players.filter(p => {
     let teamMatch = selectedTeams.includes(p.team);
     let ballMatch = !ballKnowledgeOnly || p.ballKnowledge === true;
-    return teamMatch && ballMatch;
+    let izzyMatch = !izzyMode || p.izzy === true;
+    return teamMatch && ballMatch && izzyMatch;
   });
 
   if (filtered.length === 0) {
@@ -325,8 +435,13 @@ function nextPlayer() {
 
   document.getElementById("playerImg").src = getImagePath(currentPlayer.name);
   document.getElementById("guess").value = "";
-  document.getElementById("answer").innerText = "";
   document.getElementById("status").innerText = "";
+
+  if (izzyMode) {
+    document.getElementById("answer").innerText = currentPlayer.name;
+  } else {
+    document.getElementById("answer").innerText = "";
+  }
 }
 
 /* =========================
